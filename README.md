@@ -79,8 +79,5 @@ openai_org=your_openai_organization_id
 - Review and Edit:
   - The generated .tex file can be reviewed and edited in Overleaf or any LaTeX editor.
 
-## Contributing
-- If you have suggestions for improving this project or find any bugs, please submit an issue or pull request on GitHub.
-
 ## License
 - This project is licensed under the MIT License. See the LICENSE file for details.

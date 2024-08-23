@@ -1,30 +1,23 @@
 """
-This script automates the generation of a LaTeX Beamer presentation for a specified lesson
-in a course, leveraging lesson readings, course objectives from the syllabus, and a previous
-lesson's Beamer presentation as a template.
+Automates the generation of a LaTeX Beamer presentation for quiz questions based on lesson readings,
+course objectives, and an example slide structure from a previous lesson. The script integrates various
+components such as lesson objectives, readings, and previous lesson slides to produce a consistent and
+formatted output.
 
 Workflow:
-1. **Git Update Check**:
+1. **Lesson Objectives Extraction**: Retrieves the relevant course objectives from the syllabus for the specified lessons.
+2. **Readings Aggregation**: Compiles the texts from the specified lesson readings into a single document.
+3. **Previous Lesson Integration**: Loads the Beamer presentation from the previous lesson to maintain slide formatting consistency.
+4. **Prompt Construction**: Prepares a detailed prompt for the language model, including objectives, readings, and the prior presentation structure.
+5. **LaTeX Generation**: Generates quiz questions and their corresponding LaTeX Beamer slides, following the provided structure and formatting guidelines.
+6. **Saving the Output**: Saves the generated LaTeX code to a specified file, ready for compilation into a Beamer presentation.
 
-2. **Lesson Objectives Extraction**:
-
-3. **Readings Aggregation**:
-
-4. **Previous Lesson Integration**:
-
-5. **Prompt Construction**:
-
-6. **LaTeX Generation**:
-
-7. **Saving the Output**:
-
-
-The script is designed to be run in an environment where all dependencies are available and assumes
-that the necessary files (readings, syllabus, previous lesson) are properly organized in directories
-specified by environment variables. See Readme for assumed directory structure.
-
+This script should be run in an environment with all necessary dependencies installed and assumes that
+the necessary files (readings, syllabus, previous lesson) are organized in directories specified by
+environment variables. Refer to the Readme for details on the expected directory structure.
 
 """
+
 
 
 # base libraries
