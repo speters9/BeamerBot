@@ -2,7 +2,7 @@
 
 This project automates the creation of LaTeX Beamer presentations. The script generates slide content for a specified lesson by leveraging the lesson readings, course objectives from the syllabus, and a previous lesson's Beamer presentation as a template.
 
-It contains functionality to generate slides for an instructional presentation, or for a quiz.
+It contains functionality to generate slides for an instructional presentation, or for a quiz based on course readings.
 
 ## Project Overview
 
