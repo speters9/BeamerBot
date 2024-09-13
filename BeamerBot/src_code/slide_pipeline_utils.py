@@ -122,35 +122,92 @@ def extract_lesson_objectives(syllabus_path: Path, current_lesson: int, only_cur
     return combined_content
 
 
-# Load readings from a PDF file
-def load_readings(pdf_path: Path) -> str:
+# # Load readings from a PDF file
+# def load_readings(pdf_path: Path) -> str:
+#     """
+#     Loads text from a PDF file and returns it as a string.
+#     The text is prefixed with the title derived from the PDF file name.
+
+#     Args:
+#         pdf_path (Path): The path to the PDF file.
+#     Returns:
+#         str: The text extracted from the PDF file.
+#     Raises:
+#         ValueError: If no readable text could be extracted from the PDF.
+#     """
+#     with open(str(pdf_path), 'rb') as file:
+#         reader = PyPDF2.PdfReader(file)
+#         text = 'title: ' + pdf_path.stem + "\n"
+#         extracted_text = ""
+
+#         for page in reader.pages:
+#             page_text = page.extract_text()
+#             if page_text:
+#                 extracted_text += page_text
+
+#     # Check if any text was actually extracted
+#     if not extracted_text.strip():  # Checks if extracted_text is empty or just whitespace
+#         raise ValueError(f"No readable text found in {pdf_path.name}. Ensure the PDF is in a readable format.")
+
+#     text += extracted_text
+#     return text
+
+# Load readings from either a PDF or a TXT file
+def load_readings(file_path: Path) -> str:
     """
-    Loads text from a PDF file and returns it as a string.
-    The text is prefixed with the title derived from the PDF file name.
+    Loads text from a PDF or TXT file and returns it as a string.
+    The text is prefixed with the title derived from the file name.
 
     Args:
-        pdf_path (Path): The path to the PDF file.
+        file_path (Path): The path to the file.
+
     Returns:
-        str: The text extracted from the PDF file.
+        str: The text extracted from the file.
+
     Raises:
-        ValueError: If no readable text could be extracted from the PDF.
+        ValueError: If no readable text could be extracted from the file.
     """
-    with open(str(pdf_path), 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
-        text = 'title: ' + pdf_path.stem + "\n"
+
+    # If the file is a PDF
+    if file_path.suffix == '.pdf':
+        with open(str(file_path), 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            text = 'title: ' + file_path.stem + "\n"
+            extracted_text = ""
+
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    extracted_text += page_text
+
+        # Check if any text was actually extracted
+        if not extracted_text.strip():  # Checks if extracted_text is empty or just whitespace
+            raise ValueError(f"No readable text found in {file_path.name}. Ensure the PDF is in a readable format.")
+
+        text += extracted_text
+
+    # If the file is a TXT file
+    elif file_path.suffix == '.txt':
+        text = 'title: ' + file_path.stem + "\n"  # Add the title from the filename
         extracted_text = ""
 
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                extracted_text += page_text
+        # Try reading the file with utf-8 encoding, then fall back to ISO-8859-1
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                extracted_text = file.read()
+        except UnicodeDecodeError:
+            print(f"UnicodeDecodeError in {file_path.name}, trying ISO-8859-1 encoding...")
+            with open(file_path, 'r', encoding='ISO-8859-1') as file:
+                extracted_text = file.read()
 
-    # Check if any text was actually extracted
-    if not extracted_text.strip():  # Checks if extracted_text is empty or just whitespace
-        raise ValueError(f"No readable text found in {pdf_path.name}. Ensure the PDF is in a readable format.")
+        # Check if any text was actually extracted
+        if not extracted_text.strip():
+            raise ValueError(f"No readable text found in {file_path.name}. Ensure the TXT file has content.")
 
-    text += extracted_text
+        text += extracted_text
+
     return text
+
 
 def load_beamer_presentation(tex_path: Path) -> str:
     """

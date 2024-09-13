@@ -180,3 +180,4 @@ reports/
 .spyproject/
 **/__pycache__/
 **/slide_preamble.py
+**/utils/**

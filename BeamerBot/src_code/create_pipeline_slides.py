@@ -70,9 +70,9 @@ objectives_text = extract_lesson_objectives(syllabus_path, lesson_no)
 
 # load readings from the lesson folder
 all_readings = []
-for pdf_file in inputDir.iterdir():
-    if pdf_file.suffix == '.pdf':
-        readings_text = load_readings(pdf_file)
+for file in inputDir.iterdir():
+    if file.suffix in ['.pdf', '.txt']:
+        readings_text = load_readings(file)
         all_readings.append(readings_text)
 
 # Join all readings into one string
@@ -103,12 +103,21 @@ prompt = f"""
  a slide placeholder for a student current event presentation after the title page,
  then move on to where we are in the course, what we did last, and what we'll be discussing that day.
  After that we should include a slide with an open-ended and thought-provoking discussion question relevant to the subject matter.
- One slide in the presentation should also include an exercise the students might engage in to help with their learning.
+
  The lesson shuld conclude with what we accomplished today and where we're going next (ie lesson {lesson_no+1})
  Here is the example presentation:
  ---
  {{last_presentation}}
  ---
+ Specific guidance for this lesson:
+ The lesson should be structured in a way that discusses the legislative process:
+     ie we shuld think about the structure of committees in Congress, how a bill gets from committee to the floor,
+     what happens on the floor in each house (eg debate, filibuster, etc), and then the veto or veto override process.
+     Include ideas about possible data visualization for enhanced learning.
+
+     One slide in the presentation should also include an exercise the students might engage in to help with their learning.
+     This exercise should happen in the middle of the lesson, to get students re-energized.
+
  Your answer should be returned in valid LaTeX format.
  Begin your slides at point in the preamble where we call '\title'
  """
