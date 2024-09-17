@@ -31,21 +31,21 @@ specified by environment variables. See Readme for assumed directory structure.
 import os
 from pathlib import Path
 
-# rag chain setup
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-# self-defined utils
-from BeamerBot.src_code.slide_pipeline_utils import (
-    check_git_pull,
-    extract_lesson_objectives, load_readings, load_beamer_presentation,
-    clean_latex_content
-)
-from BeamerBot.src_code.slide_preamble import preamble
-
 # env setup
 from dotenv import load_dotenv
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+# rag chain setup
+from langchain_openai import ChatOpenAI
+
+# self-defined utils
+from BeamerBot.src_code.slide_pipeline_utils import (check_git_pull,
+                                                     clean_latex_content,
+                                                     extract_lesson_objectives,
+                                                     load_beamer_presentation,
+                                                     load_readings)
+from BeamerBot.src_code.slide_preamble import preamble
+
 load_dotenv()
 
 OPENAI_KEY = os.getenv('openai_key')
@@ -96,27 +96,29 @@ prompt = f"""
  ---
  {{information}}.
  ---
- Structure the information in a way that it can be put in a Beamer
- presentation. Each slide should have a title and content, with the content
- being points that work toward the lesson objectives. To help guide you,
- an example presentation from the preceding lesson is included below. The lessons should always include
- a slide placeholder for a student current event presentation after the title page,
- then move on to where we are in the course, what we did last, and what we'll be discussing that day.
- After that we should include a slide with an open-ended and thought-provoking discussion question relevant to the subject matter.
+ Structure the information in a way that it can be put in a Beamer presentation.
 
- The lesson shuld conclude with what we accomplished today and where we're going next (ie lesson {lesson_no+1})
- Here is the example presentation:
- ---
- {{last_presentation}}
- ---
+ General Format:
+     Each slide should have a title and content, with the content being points that work toward the lesson objectives.
+     To help guide you, an example presentation from the preceding lesson is included below.
+     The lessons should always include a slide placeholder for a student current event presentation after the title page,
+     then move on to where we are in the course, what we did last lesson (Lesson {lesson_no - 1}), and what we'll be discussing that day.
+     After that we should include a slide with an open-ended and thought-provoking discussion question relevant to the subject matter.
+
  Specific guidance for this lesson:
- The lesson should be structured in a way that discusses the legislative process:
-     ie we shuld think about the structure of committees in Congress, how a bill gets from committee to the floor,
-     what happens on the floor in each house (eg debate, filibuster, etc), and then the veto or veto override process.
-     Include ideas about possible data visualization for enhanced learning.
+     The lesson should be structured in a way that discusses the powers of the presidency:
+     We should be thinking about the types of presidential power, both formal and informal.
+     We should be thinking about the sources of presidential power.
+     And we should be thinking about the variations in presidential power over time.
 
      One slide in the presentation should also include an exercise the students might engage in to help with their learning.
      This exercise should happen in the middle of the lesson, to get students re-energized.
+
+ The lesson shuld conclude with what we accomplished today and where we're going next (ie lesson {lesson_no+1})
+ Here is the example presentation from last lesson:
+ ---
+ {{last_presentation}}
+ ---
 
  Your answer should be returned in valid LaTeX format.
  Begin your slides at point in the preamble where we call '\title'

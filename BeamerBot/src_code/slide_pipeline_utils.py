@@ -1,16 +1,15 @@
 import sys
-from pathlib import Path
 import time
-
 # initial prompt
 import tkinter as tk
+from pathlib import Path
 from tkinter import simpledialog
+from typing import List, Tuple
 
+import PyPDF2
+from docx import Document
 # doc import
 from docx.opc.exceptions import PackageNotFoundError
-from docx import Document
-import PyPDF2
-from typing import List, Tuple
 
 
 # prep functions - setup git
@@ -196,9 +195,10 @@ def load_readings(file_path: Path) -> str:
             with open(file_path, 'r', encoding='utf-8') as file:
                 extracted_text = file.read()
         except UnicodeDecodeError:
-            print(f"UnicodeDecodeError in {file_path.name}, trying ISO-8859-1 encoding...")
+            print(f"UnicodeDecodeError in {file_path.name}, using ISO-8859-1 instead")
             with open(file_path, 'r', encoding='ISO-8859-1') as file:
                 extracted_text = file.read()
+            print("Successfully loaded text using alternate method.")
 
         # Check if any text was actually extracted
         if not extracted_text.strip():
@@ -247,4 +247,3 @@ def clean_latex_content(latex_content: str) -> str:
 
     cleaned_content = cleaned_content.lstrip("```latex\n").rstrip("```")
     return cleaned_content
-

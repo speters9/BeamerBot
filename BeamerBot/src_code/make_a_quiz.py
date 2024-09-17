@@ -19,26 +19,25 @@ environment variables. Refer to the Readme for details on the expected directory
 """
 
 
-
 # base libraries
 import os
 from pathlib import Path
 
-# rag chain setup
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-# self-defined utils
-from BeamerBot.src_code.slide_pipeline_utils import (
-    check_git_pull,
-    extract_lesson_objectives, load_readings, load_beamer_presentation,
-    clean_latex_content
-)
-from BeamerBot.src_code.slide_preamble import preamble
-
 # env setup
 from dotenv import load_dotenv
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+# rag chain setup
+from langchain_openai import ChatOpenAI
+
+# self-defined utils
+from BeamerBot.src_code.slide_pipeline_utils import (check_git_pull,
+                                                     clean_latex_content,
+                                                     extract_lesson_objectives,
+                                                     load_beamer_presentation,
+                                                     load_readings)
+from BeamerBot.src_code.slide_preamble import preamble
+
 load_dotenv()
 
 OPENAI_KEY = os.getenv('openai_key')
@@ -51,7 +50,7 @@ syllabus_path = Path(os.getenv('syllabus_path'))
 
 # %%
 # No more than three lessons at a time -- otherwise too much context for model
-quiz_range = range(1,4)
+quiz_range = range(9, 12)
 
 all_readings = []
 objectives = ['']
@@ -60,7 +59,7 @@ for lsn in quiz_range:
     # load readings from the lesson folder
     if os.path.exists(inputDir):
         for pdf_file in inputDir.iterdir():
-            if pdf_file.suffix == '.pdf':
+            if pdf_file.suffix in ['.pdf', '.txt']:
                 readings_text = load_readings(pdf_file)
                 all_readings.append(readings_text)
 
@@ -70,7 +69,6 @@ for lsn in quiz_range:
 
 combined_readings_text = "\n\n".join(all_readings)
 objectives = "\n".join(objectives)
-
 
 
 beamer_example = slideDir / f'L{max(quiz_range)}.tex'
