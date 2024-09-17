@@ -1,26 +1,30 @@
 """
-Automates the generation of a LaTeX Beamer presentation for quiz questions based on lesson readings,
-course objectives, and an example slide structure from a previous lesson. The script integrates various
-components such as lesson objectives, readings, and previous lesson slides to produce a consistent and
-formatted output.
+This script automates the generation of quiz questions for an undergraduate-level political science course.
+The quiz is based on lesson objectives, lesson readings, and an existing midterm review, and it checks for
+similarity to previous questions. The questions are generated using a language model and returned in multiple formats,
+including multiple-choice, true/false, and fill-in-the-blank types.
 
 Workflow:
-1. **Lesson Objectives Extraction**: Retrieves the relevant course objectives from the syllabus for the specified lessons.
-2. **Readings Aggregation**: Compiles the texts from the specified lesson readings into a single document.
-3. **Previous Lesson Integration**: Loads the Beamer presentation from the previous lesson to maintain slide formatting consistency.
-4. **Prompt Construction**: Prepares a detailed prompt for the language model, including objectives, readings, and the prior presentation structure.
-5. **LaTeX Generation**: Generates quiz questions and their corresponding LaTeX Beamer slides, following the provided structure and formatting guidelines.
-6. **Saving the Output**: Saves the generated LaTeX code to a specified file, ready for compilation into a Beamer presentation.
+1. **Data Loading**: Loads lesson readings, objectives, and the existing midterm questions.
+2. **Quiz Generation**: Uses a pre-defined prompt to generate a variety of question types (multiple choice, true/false,
+   fill-in-the-blank) based on the readings and objectives.
+3. **Similarity Check**: Compares the generated questions to the existing midterm questions using sentence embeddings
+   to ensure minimal overlap.
+4. **Question Flagging**: Flags questions that are too similar to the midterm questions based on a similarity threshold.
+5. **Saving the Output**: Outputs the final set of quiz questions in Excel format, excluding flagged questions.
 
-This script should be run in an environment with all necessary dependencies installed and assumes that
-the necessary files (readings, syllabus, previous lesson) are organized in directories specified by
-environment variables. Refer to the Readme for details on the expected directory structure.
+Dependencies:
+- This script requires access to an OpenAI API key for generating questions via a language model.
+- Ensure the necessary environment variables (`openai_key`, `openai_org`, `syllabus_path`, `readingsDir`, etc.) are set.
+- Torch and SentenceTransformer are used for similarity checking, while pandas is used for saving the output.
 
+The expected input files (e.g., lesson readings and syllabus) are organized in directories specified by the environment
+variables. The output is saved in an Excel file ready for review and further editing.
 """
 
 
-import json
 # base libraries
+import json
 import os
 from collections import namedtuple
 from pathlib import Path
@@ -28,7 +32,6 @@ from pathlib import Path
 import pandas as pd
 # embedding check for similarity against true questions
 import torch
-from docx import Document
 # env setup
 from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
@@ -39,12 +42,8 @@ from sentence_transformers import SentenceTransformer, util
 from tqdm import tqdm
 
 # self-defined utils
-from BeamerBot.src_code.slide_pipeline_utils import (check_git_pull,
-                                                     clean_latex_content,
-                                                     extract_lesson_objectives,
-                                                     load_beamer_presentation,
+from BeamerBot.src_code.slide_pipeline_utils import (extract_lesson_objectives,
                                                      load_readings)
-from BeamerBot.src_code.slide_preamble import preamble
 
 load_dotenv()
 

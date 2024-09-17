@@ -96,29 +96,29 @@ prompt = f"""
  ---
  {{information}}.
  ---
- Structure the information in a way that it can be put in a Beamer presentation.
 
- General Format:
+ General Format to follow:
      Each slide should have a title and content, with the content being points that work toward the lesson objectives.
      To help guide you, an example presentation from the preceding lesson is included below.
      The lessons should always include a slide placeholder for a student current event presentation after the title page,
      then move on to where we are in the course, what we did last lesson (Lesson {lesson_no - 1}), and what we'll be discussing that day.
      After that we should include a slide with an open-ended and thought-provoking discussion question relevant to the subject matter.
 
+ As an example, here is the presentation from last lesson:
+ ---
+ {{last_presentation}}
+ ---
+
  Specific guidance for this lesson:
-     The lesson should be structured in a way that discusses the powers of the presidency:
-     We should be thinking about the types of presidential power, both formal and informal.
-     We should be thinking about the sources of presidential power.
-     And we should be thinking about the variations in presidential power over time.
+     The lesson should be structured in a way that discusses the tensions inherent in the US judiciary:
+     We should be thinking about how a system of life tenure is compatible with a democratic government.
+     We should be thinking about how a purportedly apolitical institution can be used for partisan ends.
+     And we should be thinking about this institution interacts with the president and congress.
 
      One slide in the presentation should also include an exercise the students might engage in to help with their learning.
      This exercise should happen in the middle of the lesson, to get students re-energized.
 
- The lesson shuld conclude with what we accomplished today and where we're going next (ie lesson {lesson_no+1})
- Here is the example presentation from last lesson:
- ---
- {{last_presentation}}
- ---
+     The lesson shuld conclude with what we accomplished today and where we're going next (ie lesson {lesson_no+1})
 
  Your answer should be returned in valid LaTeX format.
  Begin your slides at point in the preamble where we call '\title'
