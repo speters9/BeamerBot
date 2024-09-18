@@ -181,3 +181,4 @@ reports/
 **/__pycache__/
 **/slide_preamble.py
 **/utils/**
+**/data/**
