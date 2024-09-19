@@ -45,6 +45,7 @@ pre-commit = "^3.8.0"
 autopep8 = "2.0.4"
 streamlit = "^1.38.0"
 gradio = "^4.44.0"
+wordcloud = "^1.9.3"
 
 
 [[tool.poetry.source]]

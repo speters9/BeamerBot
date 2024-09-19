@@ -41,6 +41,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from sentence_transformers import SentenceTransformer, util
 from tqdm import tqdm
+from wordcloud import WordCloud
 
 # self-defined utils
 from BeamerBot.src_code.slide_pipeline_utils import (extract_lesson_objectives,
@@ -352,3 +353,17 @@ visualize_graph(G)
 
 # %%
 nx.write_gexf(G, dataDir/"concept_graph_streamlined.gexf")
+
+
+# %%
+# Create a string with each concept repeated according to its frequency
+concept_string = " ".join(conceptlist)
+
+# Generate the word cloud
+wordcloud = WordCloud(width=1500, height=1000, background_color='white', max_font_size=150, max_words=250).generate(concept_string)
+
+# Display the word cloud
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
