@@ -82,47 +82,6 @@ def summarize_text(text, prompt, objectives, parser=StrOutputParser()):
     return summary
 
 
-def extract_concepts(summaries, prompt, parser=StrOutputParser()):
-    concept_template = ChatPromptTemplate.from_template(prompt)
-    chain = concept_template | llm | parser
-
-    concepts = []
-
-    for summary in summaries:
-        try:
-            concepts_extracted = chain.invoke({'summary': summary})
-            concepts_cleaned = concepts_extracted.replace("```json", "").replace("```", "")
-            concepts_dict = json.loads(concepts_cleaned)  # Wrap this part in try-except
-            for k, v in concepts_dict.items():
-                # concepts.append({k:v})
-                concepts.append(k.lower())
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
-            continue
-
-    return concepts
-
-
-def map_relationships(concept_list, prompt, objectives, parser=StrOutputParser()):
-    relationship_template = ChatPromptTemplate.from_template(prompt)
-    chain = relationship_template | llm | parser
-    relationships = []
-
-    relationship_raw = chain.invoke({'concepts': concept_list,
-                                     'objectives': objectives})
-
-    # Clean the response and parse it into a Python dictionary
-    try:
-        relationships = relationship_raw.replace("```json", "").replace("```", "")
-        relationships_list = json.loads(relationships)
-        relationship_tuples = [tuple(relationship) for relationship in relationships_list]
-    except json.JSONDecodeError as e:
-        print(f"Error parsing the relationships JSON: {e}")
-        relationship_tuples = []
-
-    return relationship_tuples
-
-
 def extract_relationships(text, objectives, prompt, parser=StrOutputParser()):
     combined_template = ChatPromptTemplate.from_template(prompt)
     chain = combined_template | llm | parser
