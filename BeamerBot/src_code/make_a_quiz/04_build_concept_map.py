@@ -29,6 +29,7 @@ import os
 from collections import namedtuple
 from pathlib import Path
 
+import inflect
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
@@ -62,7 +63,7 @@ parser = StrOutputParser()
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
-    temperature=0.1,
+    temperature=0,
     max_tokens=None,
     timeout=None,
     max_retries=2,
@@ -121,6 +122,36 @@ def map_relationships(concept_list, prompt, objectives, parser=StrOutputParser()
     return relationship_tuples
 
 
+def extract_relationships(text, objectives, prompt, parser=StrOutputParser()):
+    combined_template = ChatPromptTemplate.from_template(prompt)
+    chain = combined_template | llm | parser
+
+    response = chain.invoke({'objectives': objectives,
+                            'text': text})
+
+    try:
+        # Clean and parse the JSON output
+        response_cleaned = response.replace("```json", "").replace("```", "")
+        data = json.loads(response_cleaned)
+
+        # Extract concepts and relationships
+        relationships = [tuple(relationship) for relationship in data["relationships"]]
+
+    except json.JSONDecodeError as e:
+        print(f"Error parsing the response: {e}")
+        return []
+
+    return relationships
+
+
+def extract_concepts_from_relationships(relationships):
+    concepts = set()  # Use a set to avoid duplicates
+    for concept1, _, concept2 in relationships:
+        concepts.add(concept1)
+        concepts.add(concept2)
+    return list(concepts)
+
+
 # %%
 summary_prompt = """You are a political science professor specializing in American government.
                     You will be given a text and asked to summarize this text in light of your lesson objectives.
@@ -128,36 +159,34 @@ summary_prompt = """You are a political science professor specializing in Americ
                     Summarize the following text: \n {text}"""
 
 
-# concept_prompt = """You are a political science professor specializing in American government.
-#                     Extract key concepts and themes from the following summary: \n {summary}. \n
-#                     Key concepts and themes should be judged according to their relevance to an undergraduate American Politics course.
-#                     Return results in a valid json of type: "concept or theme": "description" """
-
-concept_prompt = """You are a political science professor specializing in American government.
-                    Extract the most important and generally applicable key concepts and themes from the following summary: \n {summary}. \n
-                    Focus on high-level concepts or overarching themes relevant to an undergraduate American Politics course.
-                    Examples of such concepts might include things like "Separation of Powers", "Federalism", "Standing Armies", or "Representation".
-
-                    Avoid overly specific or narrow topics.
-
-                    Return results in a valid json of type: "concept or theme": "description" """
-
 relationship_prompt = """You are a political science professor specializing in American government.
                         You are instructing an introductory undergraduate American government class.
                         You will be mapping relationships between the concepts this class addresses.
-                        The objectives for the lesson are: \n {objectives} \n
+                        The objectives for this lesson are: \n {objectives} \n
 
-                        I will provide a list of concepts below from this lesson. Please analyze the relationships between these concepts. \n
-                        {concepts} \n
-                        For each concept, identify how it relates to each of the other concepts in this set.
+                        From the following text for this lesson, extract the key concepts and the relationships between them.
+                        Identify the key concepts and then explain how each relates to the others.
+                        \n
+                        {text}
+                        \n
 
-                        Provide the relationships between these concepts in the format:
-                            ["Concept 1", "relationship_type", "Concept 2"]
+                        Extract the most important and generally applicable key concepts and themes from the following summary.
+                        Focus on high-level concepts or overarching themes relevant to an undergraduate American Politics course and the lesson objectives.
+                        Examples of such concepts might include things like "Separation of Powers", "Federalism", "Standing Armies", or "Representation".
+
+                        Avoid overly specific or narrow topics.
+
+                        Provide the relationships between each concept with the other discovered concepts in the format:
+                            "relationships": [
+                              ["Concept 1", "relationship_type", "Concept 2"],
+                              ["Concept 1", "relationship_type", "Concept 3"],
+                              ...
+                            ]
 
                         If there is no meaningful relationship from the standpoint of lesson objectives and your expertise as a professor of American Government, \
-                            just return "None" in the "relationship_type" section".
+                        return "None" in the "relationship_type" field.
 
-                        Because you are comparing every concept to every other concept, the json may be long. That's fine.
+                        Because you are comparing a lot of concepts, the json may be long. That's fine.
 
                         Ensure results are returned in a valid json.
                         """
@@ -185,13 +214,11 @@ for lsn in range(1, 15):
 
     for reading in readings:
         summary = summarize_text(reading, prompt=summary_prompt, objectives=lsn_objectives)
-        lsn_summaries.append(summary)
+        relationships = extract_relationships(summary, lsn_objectives, relationship_prompt, parser=StrOutputParser())
+        relationship_list.extend(relationships)
 
-    concepts = extract_concepts(lsn_summaries, prompt=concept_prompt)
-    conceptlist.extend(concepts)
-
-    relationships = map_relationships(concepts, relationship_prompt, lsn_objectives)
-    relationship_list.extend(relationships)
+        concepts = extract_concepts_from_relationships(relationships)
+        conceptlist.extend(concepts)
 
 
 # %%
@@ -206,29 +233,87 @@ with open(dataDir / 'relationship_list.json', 'w') as f:
 
 
 # %%
+dataDir = projectDir / "BeamerBot/data"
+
+with open(dataDir / 'conceptlist.json', 'r') as f:
+    conceptlist = json.load(f)
+
+with open(dataDir / 'relationship_list.json', 'r') as f:
+    relationship_list = json.load(f)
+
+
+# %%
 
 def normalize_concept(concept):
-    # Convert to lowercase, strip spaces, and standardize spacing
-    cleaned_concept = '_'.join(concept.strip().lower().split())
+    p = inflect.engine()
 
-    return cleaned_concept
+    concept = concept.lower().strip().replace(" ", "_")  # Normalize case and spacing
+    words = concept.split("_")
+    normalized_words = [p.singular_noun(word) if p.singular_noun(word) else word for word in words]
+    return "_".join(normalized_words)
+
+
+def jaccard_similarity(concept1, concept2, threshold=0.9):
+    set1 = set(concept1)
+    set2 = set(concept2)
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    similarity = intersection / union
+    return similarity >= threshold
+
+
+def replace_similar_concepts(existing_concepts, new_concept):
+    """
+    Check if the new concept matches any existing concept by similarity.
+    If a match is found, return the existing concept.
+    If no match is found, return the new concept as is.
+    """
+    for existing_concept in existing_concepts:
+        if jaccard_similarity(existing_concept, new_concept):
+            return existing_concept
+    return new_concept
+
+
+def process_relationships(relationships):
+    # Initialize a set to keep track of all unique concepts
+    unique_concepts = set()
+    processed_relationships = []
+
+    for concept1, relationship, concept2 in relationships:
+        # Normalize concepts
+        concept1 = normalize_concept(concept1)
+        concept2 = normalize_concept(concept2)
+
+        # Replace similar concepts with existing ones
+        concept1 = replace_similar_concepts(unique_concepts, concept1)
+        concept2 = replace_similar_concepts(unique_concepts, concept2)
+
+        # Add concepts to the unique set
+        unique_concepts.add(concept1)
+        unique_concepts.add(concept2)
+
+        # Add the relationship to the processed list
+        processed_relationships.append((concept1, relationship, concept2))
+
+    return processed_relationships
 
 
 def build_graph(relationships):
-    # Initialize a directed graph
-    G = nx.DiGraph()
+    # Initialize an undirected graph
+    G = nx.Graph()
 
-    # Add nodes and edges from relationships, normalizing concepts
-    for concept1, relationship, concept2 in relationships:
+    processed_relationships = process_relationships(relationships)
+
+    # Add nodes and edges from relationships
+    for concept1, relationship, concept2 in processed_relationships:
         concept1 = normalize_concept(concept1)
         concept2 = normalize_concept(concept2)
 
         if relationship != "None":
-            # Add an edge, incrementing the weight if the edge already exists
             if G.has_edge(concept1, concept2):
-                G[concept1][concept2]['weight'] += 1  # Increase the weight for multiple relationships
+                G[concept1][concept2]['weight'] += 1
             else:
-                G.add_edge(concept1, concept2, weight=1)  # Initialize weight as 1
+                G.add_edge(concept1, concept2, weight=1)
 
     return G
 
@@ -266,4 +351,4 @@ G = build_graph(relationship_list)
 visualize_graph(G)
 
 # %%
-nx.write_gexf(G, dataDir/"concept_graph.gexf")
+nx.write_gexf(G, dataDir/"concept_graph_streamlined.gexf")
