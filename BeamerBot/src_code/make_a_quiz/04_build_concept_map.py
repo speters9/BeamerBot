@@ -266,9 +266,6 @@ def build_graph(relationships):
 
     # Add nodes and edges from relationships
     for concept1, relationship, concept2 in processed_relationships:
-        concept1 = normalize_concept(concept1)
-        concept2 = normalize_concept(concept2)
-
         if relationship != "None":
             if G.has_edge(concept1, concept2):
                 G[concept1][concept2]['weight'] += 1
