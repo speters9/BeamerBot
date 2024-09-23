@@ -56,7 +56,6 @@ syllabus_path = Path(os.getenv('syllabus_path'))
 projectDir = Path(os.getenv('projectDir'))
 
 # %%
-parser = StrOutputParser()
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
@@ -69,7 +68,7 @@ llm = ChatOpenAI(
 )
 
 
-def summarize_text(text: str, prompt: str, objectives: str, parser: StrOutputParser) -> str:
+def summarize_text(text: str, prompt: str, objectives: str, parser=StrOutputParser()) -> str:
     """
     Summarize the provided text using the specified prompt and objectives.
 
@@ -90,7 +89,7 @@ def summarize_text(text: str, prompt: str, objectives: str, parser: StrOutputPar
     return summary
 
 
-def extract_relationships(text: str, objectives: str, prompt: str, parser: StrOutputParser) -> List[Tuple[str, str, str]]:
+def extract_relationships(text: str, objectives: str, prompt: str, parser=StrOutputParser()) -> List[Tuple[str, str, str]]:
     """
     Extract key concepts and their relationships from the provided text.
 
@@ -180,6 +179,7 @@ relationship_prompt = """You are a political science professor specializing in A
                         Ensure results are returned in a valid json.
                         """
 
+parser = StrOutputParser()
 relationship_list = []
 conceptlist = []
 
@@ -202,12 +202,13 @@ for lsn in range(1, 15):
     lsn_objectives = extract_lesson_objectives(syllabus_path, lsn, only_current=True)
 
     for reading in readings:
-        summary = summarize_text(reading, prompt=summary_prompt, objectives=lsn_objectives)
-        relationships = extract_relationships(summary, lsn_objectives, relationship_prompt, parser=StrOutputParser())
+        summary = summarize_text(reading, prompt=summary_prompt, objectives=lsn_objectives, parser=parser)
+        relationships = extract_relationships(summary, lsn_objectives, relationship_prompt, parser=parser)
         relationship_list.extend(relationships)
 
         concepts = extract_concepts_from_relationships(relationships)
         conceptlist.extend(concepts)
+        break
 
 
 # %%

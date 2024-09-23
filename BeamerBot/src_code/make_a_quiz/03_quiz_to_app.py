@@ -81,7 +81,7 @@ def submit_answer(current_index: int, user_answer: str) -> str:
     if user_answer == correct_answer_text:
         feedback = f"Question {current_index + 1}: Correct!"
     else:
-        feedback = f"Question {current_index + 1}: Incorrect. The correct answer was {correct_answer_text}."
+        feedback = f"Question {current_index + 1}: Incorrect. The correct answer was: {correct_answer_text}."
 
     return feedback  # Only return the feedback for now
 
